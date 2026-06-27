@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Live Currency Converter</title>
+  <style>
+    :root {
+      --bg: #f0fdf4;
+      --card: #ffffff;
+      --border: #d1fae5;
+      --text: #065f46;
+      --muted: #6b7280;
+      --accent: #059669;
+      --accent-hover: #047857;
+      --result-bg: #ecfdf5;
+      --radius: 16px;
+      --shadow: 0 4px 24px rgba(5,150,105,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .converter {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 420px;
+      padding: 32px;
+      border: 1px solid var(--border);
+    }
+
+    .converter-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .converter-header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .converter-header p {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-top: 4px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    input[type="number"], select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      color: var(--text);
+      background: var(--card);
+      font-family: inherit;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--accent);
+    }
+
+    input[type="number"] {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    /* Hide number spinner arrows */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type="number"] { -moz-appearance: textfield; }
+
+    .swap-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .swap-row .form-group { flex: 1; margin-bottom: 0; }
+
+    .swap-btn {
+      background: var(--result-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      color: var(--accent);
+      transition: background 0.2s, transform 0.2s;
+      flex-shrink: 0;
+      margin-top: 22px; /* align with selects */
+    }
+
+    .swap-btn:hover {
+      background: var(--border);
+      transform: rotate(180deg);
+    }
+
+    .convert-btn {
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 4px;
+    }
+
+    .convert-btn:hover   { background: var(--accent-hover); }
+    .convert-btn:active  { transform: scale(0.98); }
+    .convert-btn:disabled{ background: #9ca3af; cursor: not-allowed; }
+
+    .result-box {
+      margin-top: 24px;
+      background: var(--result-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .result-amount {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--accent);
+      margin: 8px 0 4px;
+      line-height: 1;
+    }
+
+    .result-amount .result-currency {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .result-rate {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .result-date {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .error-box {
+      margin-top: 20px;
+      background: #fef2f2;
+      border: 1.5px solid #fecaca;
+      border-radius: 10px;
+      padding: 14px;
+      color: #b91c1c;
+      font-size: 0.88rem;
+      text-align: center;
+    }
+
+    .loading-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 12px;
+    }
+
+    .spinner-sm {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(5,150,105,0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="converter">
+  <div class="converter-header">
+    <h1>💱 Currency Converter</h1>
+    <p>Live rates via Frankfurter (ECB)</p>
+  </div>
+
+  <div class="form-group">
+    <label for="amount">Amount</label>
+    <input type="number" id="amount" value="1" min="0" step="any" placeholder="Enter amount" />
+  </div>
+
+  <div class="swap-row">
+    <div class="form-group">
+      <label for="from-currency">From</label>
+      <select id="from-currency"><option>Loading...</option></select>
+    </div>
+    <button class="swap-btn" id="swap-btn" title="Swap currencies">⇄</button>
+    <div class="form-group">
+      <label for="to-currency">To</label>
+      <select id="to-currency"><option>Loading...</option></select>
+    </div>
+  </div>
+
+  <button class="convert-btn" id="convert-btn" disabled>Convert</button>
+
+  <div id="result-area"></div>
+</div>
+
+<script>
+  // ============================================================
+  // CONFIG — Frankfurter API, no key required
+  // ============================================================
+  const CONFIG = {
+    CURRENCIES_URL: "https://api.frankfurter.app/currencies",
+    RATES_BASE_URL: "https://api.frankfurter.app/latest",
+    DEFAULT_FROM:   "USD",
+    DEFAULT_TO:     "EUR"
+  };
+
+  const amountEl   = document.getElementById("amount");
+  const fromEl     = document.getElementById("from-currency");
+  const toEl       = document.getElementById("to-currency");
+  const convertBtn = document.getElementById("convert-btn");
+  const swapBtn    = document.getElementById("swap-btn");
+  const resultArea = document.getElementById("result-area");
+
+  let currencies = {}; // code → name
+
+  // Populate dropdowns from live currencies list
+  async function loadCurrencies() {
+    resultArea.innerHTML = `<div class="loading-indicator"><div class="spinner-sm"></div> Loading currencies...</div>`;
+    try {
+      const res  = await fetch(CONFIG.CURRENCIES_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      currencies = await res.json();
+
+      const codes = Object.keys(currencies).sort();
+
+      [fromEl, toEl].forEach((sel, idx) => {
+        sel.innerHTML = codes
+          .map(c => `<option value="${c}">${c} — ${currencies[c]}</option>`)
+          .join("");
+        sel.value = idx === 0 ? CONFIG.DEFAULT_FROM : CONFIG.DEFAULT_TO;
+      });
+
+      convertBtn.disabled = false;
+      resultArea.innerHTML = "";
+    } catch (err) {
+      resultArea.innerHTML = `<div class="error-box">Failed to load currencies: ${err.message}</div>`;
+    }
+  }
+
+  // Fetch rate and display result
+  async function convert() {
+    const amount = parseFloat(amountEl.value);
+    if (isNaN(amount) || amount < 0) {
+      resultArea.innerHTML = `<div class="error-box">Please enter a valid positive amount.</div>`;
+      return;
+    }
+
+    const from = fromEl.value;
+    const to   = toEl.value;
+
+    if (from === to) {
+      resultArea.innerHTML = `
+        <div class="result-box">
+          <div class="result-label">Result</div>
+          <div class="result-amount">${amount.toLocaleString()} <span class="result-currency">${to}</span></div>
+          <div class="result-rate">1 ${from} = 1 ${to} (same currency)</div>
+        </div>`;
+      return;
+    }
+
+    convertBtn.disabled = true;
+    convertBtn.textContent = "Converting...";
+    resultArea.innerHTML = `<div class="loading-indicator"><div class="spinner-sm"></div> Fetching rate...</div>`;
+
+    try {
+      const url = `${CONFIG.RATES_BASE_URL}?from=${from}&to=${to}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      const rate      = data.rates[to];
+      const converted = (amount * rate).toFixed(2);
+
+      resultArea.innerHTML = `
+        <div class="result-box">
+          <div class="result-label">${amount.toLocaleString()} ${currencies[from] || from} equals</div>
+          <div class="result-amount">${parseFloat(converted).toLocaleString("en-US", {minimumFractionDigits: 2})} <span class="result-currency">${to}</span></div>
+          <div class="result-rate">1 ${from} = ${rate} ${to}</div>
+          <div class="result-date">Rate date: ${data.date}</div>
+        </div>`;
+    } catch (err) {
+      resultArea.innerHTML = `<div class="error-box">Conversion failed: ${err.message}</div>`;
+    } finally {
+      convertBtn.disabled = false;
+      convertBtn.textContent = "Convert";
+    }
+  }
+
+  // Swap from/to currencies
+  swapBtn.addEventListener("click", () => {
+    const tmp   = fromEl.value;
+    fromEl.value = toEl.value;
+    toEl.value   = tmp;
+    // Re-run if there's already a result visible
+    if (resultArea.querySelector(".result-box")) convert();
+  });
+
+  // Convert on button click
+  convertBtn.addEventListener("click", convert);
+
+  // Also convert on Enter key in amount field
+  amountEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !convertBtn.disabled) convert();
+  });
+
+  // Initialise
+  loadCurrencies();
+</script>
+</body>
+</html>

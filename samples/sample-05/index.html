@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Inspiration + Joke Feed</title>
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --card: #ffffff;
+      --card2: #fffbf0;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --accent-purple: #7c3aed;
+      --accent-yellow: #d97706;
+      --border-purple: rgba(124,58,237,0.15);
+      --border-yellow: rgba(217,119,6,0.2);
+      --radius: 18px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+
+    .feed {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .feed-header {
+      text-align: center;
+      margin-bottom: 28px;
+      color: white;
+    }
+
+    .feed-header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    .feed-header p {
+      font-size: 0.88rem;
+      opacity: 0.85;
+      margin-top: 4px;
+      font-family: system-ui, sans-serif;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 28px;
+      margin-bottom: 18px;
+      border: 1.5px solid var(--border-purple);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card.joke-card {
+      background: var(--card2);
+      border-color: var(--border-yellow);
+    }
+
+    .card-type {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: system-ui, sans-serif;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .card-type-icon {
+      font-size: 1rem;
+    }
+
+    .card-type-label {
+      color: var(--accent-purple);
+    }
+
+    .joke-card .card-type-label {
+      color: var(--accent-yellow);
+    }
+
+    .quote-text {
+      font-size: 1.15rem;
+      line-height: 1.7;
+      color: var(--text);
+      font-style: italic;
+      position: relative;
+      padding-left: 18px;
+    }
+
+    .quote-text::before {
+      content: "\201C";
+      position: absolute;
+      left: -4px;
+      top: -8px;
+      font-size: 3rem;
+      color: var(--border-purple);
+      line-height: 1;
+      font-style: normal;
+    }
+
+    .quote-author {
+      margin-top: 16px;
+      font-family: system-ui, sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-purple);
+      font-style: normal;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .quote-author::before {
+      content: "";
+      display: inline-block;
+      width: 20px;
+      height: 2px;
+      background: var(--accent-purple);
+      opacity: 0.4;
+    }
+
+    .joke-text {
+      font-size: 1.1rem;
+      line-height: 1.65;
+      color: var(--text);
+      font-style: normal;
+    }
+
+    .punchline-reveal {
+      display: none;
+    }
+
+    .card-loading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-family: system-ui, sans-serif;
+      font-size: 0.88rem;
+      padding: 8px 0;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(0,0,0,0.08);
+      border-top-color: var(--accent-purple);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    .joke-card .spinner { border-top-color: var(--accent-yellow); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .card-error {
+      font-family: system-ui, sans-serif;
+      font-size: 0.85rem;
+      color: #b91c1c;
+      padding: 4px 0;
+    }
+
+    .refresh-row {
+      text-align: center;
+      margin-top: 8px;
+    }
+
+    .refresh-btn {
+      background: white;
+      color: var(--accent-purple);
+      border: none;
+      border-radius: 999px;
+      padding: 12px 32px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: system-ui, sans-serif;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .refresh-btn:hover  { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.18); }
+    .refresh-btn:active { transform: scale(0.97); }
+    .refresh-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .card-content { animation: slideUp 0.3s ease; }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fallback-note {
+      font-family: system-ui, sans-serif;
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<div class="feed">
+  <div class="feed-header">
+    <h1>✨ Daily Inspiration</h1>
+    <p>A quote and a laugh — just what you need</p>
+  </div>
+
+  <!-- Quote Card -->
+  <div class="card" id="quote-card">
+    <div class="card-type">
+      <span class="card-type-icon">💬</span>
+      <span class="card-type-label">Quote of the Day</span>
+    </div>
+    <div id="quote-content">
+      <div class="card-loading"><div class="spinner"></div> Loading quote...</div>
+    </div>
+  </div>
+
+  <!-- Joke Card -->
+  <div class="card joke-card" id="joke-card">
+    <div class="card-type">
+      <span class="card-type-icon">😂</span>
+      <span class="card-type-label">Dad Joke</span>
+    </div>
+    <div id="joke-content">
+      <div class="card-loading">
+        <div class="spinner" style="border-top-color: var(--accent-yellow)"></div>
+        Loading joke...
+      </div>
+    </div>
+  </div>
+
+  <div class="refresh-row">
+    <button class="refresh-btn" id="refresh-btn" onclick="loadAll()">🎲 Get New Ones</button>
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  // CONFIG — API endpoints, no keys required
+  // ============================================================
+  const CONFIG = {
+    QUOTE_URL: "https://zenquotes.io/api/random",
+    JOKE_URL:  "https://icanhazdadjoke.com/"
+  };
+
+  // Fallback quotes shown when ZenQuotes blocks CORS (common on GitHub Pages)
+  const FALLBACK_QUOTES = [
+    { q: "The only way to do great work is to love what you do.", a: "Steve Jobs" },
+    { q: "In the middle of every difficulty lies opportunity.", a: "Albert Einstein" },
+    { q: "It does not matter how slowly you go as long as you do not stop.", a: "Confucius" },
+    { q: "Life is what happens when you're busy making other plans.", a: "John Lennon" },
+    { q: "The future belongs to those who believe in the beauty of their dreams.", a: "Eleanor Roosevelt" },
+    { q: "Strive not to be a success, but rather to be of value.", a: "Albert Einstein" },
+    { q: "The mind is everything. What you think you become.", a: "Buddha" },
+    { q: "An unexamined life is not worth living.", a: "Socrates" },
+    { q: "Spread love everywhere you go. Let no one ever come to you without leaving happier.", a: "Mother Teresa" },
+    { q: "When you reach the end of your rope, tie a knot in it and hang on.", a: "Franklin D. Roosevelt" },
+  ];
+
+  function randomFallbackQuote() {
+    return FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
+  }
+
+  function setQuoteLoading() {
+    document.getElementById("quote-content").innerHTML =
+      `<div class="card-loading"><div class="spinner"></div> Loading quote...</div>`;
+  }
+
+  function setJokeLoading() {
+    document.getElementById("joke-content").innerHTML =
+      `<div class="card-loading"><div class="spinner" style="border-top-color:var(--accent-yellow)"></div> Loading joke...</div>`;
+  }
+
+  function renderQuote(q, a, isFallback) {
+    document.getElementById("quote-content").innerHTML = `
+      <div class="card-content">
+        <p class="quote-text">${q}</p>
+        <p class="quote-author">${a}</p>
+        ${isFallback ? `<p class="fallback-note">(Local collection — ZenQuotes may be unavailable in this environment)</p>` : ""}
+      </div>
+    `;
+  }
+
+  function renderJoke(joke) {
+    document.getElementById("joke-content").innerHTML = `
+      <div class="card-content">
+        <p class="joke-text">${joke}</p>
+      </div>
+    `;
+  }
+
+  function renderQuoteError(msg) {
+    document.getElementById("quote-content").innerHTML =
+      `<div class="card-error">Could not load quote: ${msg}</div>`;
+  }
+
+  function renderJokeError(msg) {
+    document.getElementById("joke-content").innerHTML =
+      `<div class="card-error">Could not load joke: ${msg}</div>`;
+  }
+
+  async function loadQuote() {
+    setQuoteLoading();
+    try {
+      // ZenQuotes returns an array of objects: [{q, a, h}, ...]
+      const res = await fetch(CONFIG.QUOTE_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!Array.isArray(data) || !data[0]) throw new Error("Unexpected response");
+      renderQuote(data[0].q, data[0].a, false);
+    } catch (_err) {
+      // CORS or network error — fall back to local collection
+      const fb = randomFallbackQuote();
+      renderQuote(fb.q, fb.a, true);
+    }
+  }
+
+  async function loadJoke() {
+    setJokeLoading();
+    try {
+      const res = await fetch(CONFIG.JOKE_URL, {
+        headers: { "Accept": "application/json" }
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data.joke) throw new Error("No joke in response");
+      renderJoke(data.joke);
+    } catch (err) {
+      renderJokeError(err.message);
+    }
+  }
+
+  async function loadAll() {
+    const btn = document.getElementById("refresh-btn");
+    btn.disabled = true;
+    btn.textContent = "Loading...";
+
+    // Fetch both in parallel
+    await Promise.all([loadQuote(), loadJoke()]);
+
+    btn.disabled = false;
+    btn.textContent = "🎲 Get New Ones";
+  }
+
+  // Load on page open
+  loadAll();
+</script>
+</body>
+</html>
