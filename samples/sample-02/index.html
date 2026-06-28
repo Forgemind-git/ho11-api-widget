@@ -1,167 +1,336 @@
-<!-- TODO: Set the API_URL, implement fetchData() to call it, and update renderData() to display the results -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crypto Ticker</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crypto Price Ticker</title>
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --bg: #09090b;
+      --surface: #18181b;
+      --border: #27272a;
+      --text: #fafafa;
+      --muted: #71717a;
+      --green: #22c55e;
+      --red: #ef4444;
+      --accent: #f59e0b;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 20px;
     }
-    .widget { width: 100%; max-width: 480px; }
-    .widget-title {
+
+    header {
       text-align: center;
-      font-size: 13px;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      margin-bottom: 20px;
+      margin-bottom: 32px;
     }
-    .coin-card {
-      background: #1e293b;
-      border-radius: 14px;
-      padding: 20px 24px;
-      margin-bottom: 12px;
-      border: 1px solid rgba(255,255,255,.06);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .coin-name { font-size: 14px; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; }
-    .coin-symbol { font-size: 20px; font-weight: 800; margin-top: 2px; }
-    .coin-price { font-size: 1.6rem; font-weight: 700; color: #f8fafc; }
-    .coin-change {
-      font-size: 14px;
+
+    header h1 {
+      font-size: 1.5rem;
       font-weight: 700;
-      margin-top: 4px;
-      text-align: right;
+      letter-spacing: -0.02em;
+      color: var(--text);
     }
-    .coin-change.positive { color: #22c55e; }
-    .coin-change.negative { color: #ef4444; }
-    .coin-mcap { font-size: 11px; color: #64748b; margin-top: 4px; text-align: right; }
-    .bottom-bar {
+
+    header p {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-top: 4px;
+    }
+
+    .ticker-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .coin-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-top: 16px;
+      transition: border-color 0.2s;
     }
-    .updated { font-size: 12px; color: #64748b; }
+
+    .coin-card:hover { border-color: #52525b; }
+
+    .coin-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .coin-symbol-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+    }
+
+    .badge-btc { background: rgba(247,147,26,0.15); color: #f7931a; }
+    .badge-eth { background: rgba(98,126,234,0.15); color: #627eea; }
+    .badge-sol { background: rgba(153,69,255,0.15); color: #9945ff; }
+
+    .coin-name { font-size: 1rem; font-weight: 700; }
+    .coin-id   { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+    .coin-right { text-align: right; }
+
+    .coin-price {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    .coin-change {
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-top: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .change-up   { color: var(--green); }
+    .change-down { color: var(--red); }
+    .change-flat { color: var(--muted); }
+
+    .controls {
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
     .refresh-btn {
       background: transparent;
-      border: 1px solid rgba(56,189,248,.3);
-      color: #38bdf8;
+      border: 1px solid var(--border);
+      color: var(--muted);
       padding: 7px 18px;
       border-radius: 999px;
       cursor: pointer;
-      font-size: 13px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      transition: all 0.2s;
     }
-    .refresh-btn:hover { background: rgba(56,189,248,.1); }
+
+    .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .countdown {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .loading-state, .error-state {
+      text-align: center;
+      width: 100%;
+      max-width: 420px;
+      padding: 60px 20px;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(245,158,11,0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 14px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-state p { color: var(--muted); font-size: 0.9rem; }
+    .error-state p   { color: var(--red); font-size: 0.9rem; margin-top: 10px; }
+    .error-icon      { font-size: 2rem; }
+
+    .pulse {
+      animation: pulse 0.5s ease-out;
+    }
+
+    @keyframes pulse {
+      0%   { opacity: 0.5; transform: scale(0.97); }
+      100% { opacity: 1;   transform: scale(1); }
+    }
   </style>
 </head>
 <body>
-<div class="widget">
-  <div class="widget-title">Crypto Ticker &mdash; Starter</div>
 
-  <!-- ===== DISPLAY SECTION — fill in real values via renderData() ===== -->
+<header>
+  <h1>📈 Crypto Ticker</h1>
+  <p>Live prices via CoinGecko</p>
+</header>
 
-  <!-- Bitcoin row -->
-  <div class="coin-card">
-    <div>
-      <div class="coin-name">Bitcoin</div>
-      <div class="coin-symbol">BTC</div>
-    </div>
-    <div>
-      <div class="coin-price" id="btc-price">&mdash;</div>
-      <!-- TODO: add class "positive" or "negative" based on the value -->
-      <div class="coin-change" id="btc-change">&mdash;</div>
-      <div class="coin-mcap" id="btc-mcap">Market cap: &mdash;</div>
-    </div>
-  </div>
-
-  <!-- Ethereum row -->
-  <div class="coin-card">
-    <div>
-      <div class="coin-name">Ethereum</div>
-      <div class="coin-symbol">ETH</div>
-    </div>
-    <div>
-      <div class="coin-price" id="eth-price">&mdash;</div>
-      <div class="coin-change" id="eth-change">&mdash;</div>
-      <div class="coin-mcap" id="eth-mcap">Market cap: &mdash;</div>
-    </div>
-  </div>
-
-  <!-- Solana row -->
-  <div class="coin-card">
-    <div>
-      <div class="coin-name">Solana</div>
-      <div class="coin-symbol">SOL</div>
-    </div>
-    <div>
-      <div class="coin-price" id="sol-price">&mdash;</div>
-      <div class="coin-change" id="sol-change">&mdash;</div>
-      <div class="coin-mcap" id="sol-mcap">Market cap: &mdash;</div>
-    </div>
-  </div>
-  <!-- ===== END DISPLAY SECTION ===== -->
-
-  <div class="bottom-bar">
-    <div class="updated" id="updated-at">Not loaded yet</div>
-    <button class="refresh-btn" onclick="fetchData()">&#8635; Refresh</button>
+<div id="app">
+  <div class="loading-state">
+    <div class="spinner"></div>
+    <p>Fetching prices...</p>
   </div>
 </div>
 
 <script>
-  // ---------------------------------------------------------------
-  // STEP 1: Build the CoinGecko API URL
-  // Docs: https://www.coingecko.com/en/api/documentation
-  // Endpoint: GET /simple/price
-  // ---------------------------------------------------------------
-  const API_URL = ''; // TODO: set the CoinGecko URL with ids=bitcoin,ethereum,solana&vs_currencies=usd&include_24hr_change=true&include_market_cap=true
+  // ============================================================
+  // CONFIG — edit to change coins or refresh interval
+  // ============================================================
+  const CONFIG = {
+    COINS: ["bitcoin", "ethereum", "solana"], // CoinGecko coin IDs
+    VS_CURRENCY: "usd",                        // Display currency
+    AUTO_REFRESH_SECONDS: 60                   // Set 0 to disable
+  };
 
-  // ---------------------------------------------------------------
-  // STEP 2: Fetch live data from the API
-  // ---------------------------------------------------------------
-  async function fetchData() {
-    document.getElementById('updated-at').textContent = 'Loading...';
+  // Coin display metadata
+  const COIN_META = {
+    bitcoin:  { symbol: "BTC", label: "Bitcoin",  badge: "badge-btc" },
+    ethereum: { symbol: "ETH", label: "Ethereum", badge: "badge-eth" },
+    solana:   { symbol: "SOL", label: "Solana",   badge: "badge-sol" },
+  };
 
-    // TODO: Call the API using fetch()
-    // const response = await fetch(API_URL);
-    // const data = await response.json();
+  const API_URL =
+    `https://api.coingecko.com/api/v3/simple/price` +
+    `?ids=${CONFIG.COINS.join(",")}` +
+    `&vs_currencies=${CONFIG.VS_CURRENCY}` +
+    `&include_24hr_change=true`;
 
-    // TODO: Pass the response to renderData()
-    renderData({});
+  let countdownTimer = null;
+  let secondsLeft    = CONFIG.AUTO_REFRESH_SECONDS;
+
+  function formatPrice(n) {
+    if (n >= 1000) return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+    if (n >= 1)    return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return "$" + n.toFixed(4);
   }
 
-  // ---------------------------------------------------------------
-  // STEP 3: Update the display with real values
-  // ---------------------------------------------------------------
-  function renderData(data) {
-    // TODO: Fill in each coin's price, 24h change, and market cap
-    // Example for Bitcoin:
-    // document.getElementById('btc-price').textContent = '$' + data.bitcoin.usd.toLocaleString();
-    // const btcChange = data.bitcoin.usd_24h_change.toFixed(2);
-    // const btcEl = document.getElementById('btc-change');
-    // btcEl.textContent = (btcChange > 0 ? '+' : '') + btcChange + '%';
-    // btcEl.className = 'coin-change ' + (btcChange >= 0 ? 'positive' : 'negative');
-    // document.getElementById('btc-mcap').textContent = 'Market cap: $' + (data.bitcoin.usd_market_cap / 1e9).toFixed(1) + 'B';
-
-    document.getElementById('updated-at').textContent =
-      'Updated: ' + new Date().toLocaleTimeString();
+  function changeClass(pct) {
+    if (pct > 0.01)  return "change-up";
+    if (pct < -0.01) return "change-down";
+    return "change-flat";
   }
 
-  // Auto-refresh every 30 seconds
-  fetchData();
-  setInterval(fetchData, 30000);
+  function changeArrow(pct) {
+    if (pct > 0.01)  return "▲";
+    if (pct < -0.01) return "▼";
+    return "—";
+  }
+
+  function renderCards(data) {
+    const cards = CONFIG.COINS.map(id => {
+      const meta    = COIN_META[id] || { symbol: id.toUpperCase(), label: id, badge: "" };
+      const info    = data[id];
+      const price   = info ? formatPrice(info[CONFIG.VS_CURRENCY]) : "—";
+      const change  = info ? info[`${CONFIG.VS_CURRENCY}_24h_change`] : null;
+      const cls     = change !== null ? changeClass(change) : "change-flat";
+      const arrow   = change !== null ? changeArrow(change) : "";
+      const pctStr  = change !== null ? `${Math.abs(change).toFixed(2)}%` : "N/A";
+
+      return `
+        <div class="coin-card pulse">
+          <div class="coin-left">
+            <div class="coin-symbol-badge ${meta.badge}">${meta.symbol}</div>
+            <div>
+              <div class="coin-name">${meta.label}</div>
+              <div class="coin-id">${meta.symbol}/USD</div>
+            </div>
+          </div>
+          <div class="coin-right">
+            <div class="coin-price">${price}</div>
+            <div class="coin-change ${cls}">${arrow} ${pctStr}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    const autoRefreshNote = CONFIG.AUTO_REFRESH_SECONDS > 0
+      ? `<span class="countdown" id="countdown">Refreshing in ${secondsLeft}s</span>`
+      : "";
+
+    document.getElementById("app").innerHTML = `
+      <div class="ticker-grid">${cards}</div>
+      <div class="controls">
+        <button class="refresh-btn" onclick="manualRefresh()">↻ Refresh</button>
+        ${autoRefreshNote}
+      </div>
+    `;
+  }
+
+  function renderError(msg) {
+    document.getElementById("app").innerHTML = `
+      <div class="error-state">
+        <div class="error-icon">⚠️</div>
+        <p>${msg}</p>
+        <button class="refresh-btn" onclick="manualRefresh()" style="margin-top:16px">Try Again</button>
+      </div>
+    `;
+  }
+
+  function renderLoading() {
+    document.getElementById("app").innerHTML = `
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Fetching prices...</p>
+      </div>
+    `;
+  }
+
+  function startCountdown() {
+    if (CONFIG.AUTO_REFRESH_SECONDS <= 0) return;
+    clearInterval(countdownTimer);
+    secondsLeft = CONFIG.AUTO_REFRESH_SECONDS;
+
+    countdownTimer = setInterval(() => {
+      secondsLeft--;
+      const el = document.getElementById("countdown");
+      if (el) el.textContent = `Refreshing in ${secondsLeft}s`;
+      if (secondsLeft <= 0) {
+        clearInterval(countdownTimer);
+        loadData();
+      }
+    }, 1000);
+  }
+
+  async function loadData() {
+    clearInterval(countdownTimer);
+    try {
+      const res = await fetch(API_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status} — ${res.statusText}`);
+      const data = await res.json();
+      if (!data || Object.keys(data).length === 0)
+        throw new Error("Empty response from CoinGecko");
+      renderCards(data);
+      startCountdown();
+    } catch (err) {
+      renderError(`Failed to fetch prices: ${err.message}`);
+    }
+  }
+
+  function manualRefresh() {
+    clearInterval(countdownTimer);
+    loadData();
+  }
+
+  // Load on page open
+  loadData();
 </script>
 </body>
 </html>

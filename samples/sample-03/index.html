@@ -1,147 +1,370 @@
-<!-- TODO: Set the API_URL, implement fetchData() to call it, and update renderData() to display the results -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GitHub Stats Card</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GitHub Repo Stats Card</title>
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --bg: #0d1117;
+      --card: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --link: #58a6ff;
+      --radius: 12px;
+    }
+
+    /* Language colour map (subset) */
+    .lang-javascript { --lang-color: #f1e05a; }
+    .lang-typescript { --lang-color: #3178c6; }
+    .lang-python     { --lang-color: #3572a5; }
+    .lang-java       { --lang-color: #b07219; }
+    .lang-go         { --lang-color: #00add8; }
+    .lang-rust       { --lang-color: #dea584; }
+    .lang-cpp        { --lang-color: #f34b7d; }
+    .lang-c          { --lang-color: #555555; }
+    .lang-ruby       { --lang-color: #701516; }
+    .lang-php        { --lang-color: #4f5d95; }
+    .lang-swift      { --lang-color: #fa7343; }
+    .lang-kotlin     { --lang-color: #a97bff; }
+    .lang-html       { --lang-color: #e34c26; }
+    .lang-css        { --lang-color: #563d7c; }
+    .lang-shell      { --lang-color: #89e051; }
+    .lang-default    { --lang-color: #8b949e; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
     }
-    .widget { width: 100%; max-width: 480px; }
+
     .card {
-      background: #1e293b;
-      border-radius: 16px;
-      padding: 28px;
-      border: 1px solid rgba(255,255,255,.06);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 480px;
+      overflow: hidden;
     }
-    .repo-header { margin-bottom: 20px; }
-    .repo-name { font-size: 1.2rem; font-weight: 800; color: #38bdf8; }
-    .repo-desc { font-size: 13px; color: #94a3b8; margin-top: 6px; line-height: 1.5; }
-    .stats-row { display: flex; gap: 12px; margin-bottom: 16px; }
-    .stat {
-      flex: 1;
-      background: #243044;
-      border-radius: 10px;
-      padding: 14px;
+
+    .card-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .repo-path {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .repo-icon { font-size: 1rem; color: var(--muted); }
+
+    .repo-full-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--link);
+      text-decoration: none;
+    }
+
+    .repo-full-name:hover { text-decoration: underline; }
+
+    .visibility-badge {
+      font-size: 0.65rem;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 1px 8px;
+      color: var(--muted);
+      text-transform: capitalize;
+    }
+
+    .repo-description {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .topics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .topic {
+      font-size: 0.72rem;
+      background: rgba(88,166,255,0.1);
+      color: var(--link);
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-weight: 500;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+    }
+
+    .stat-cell {
+      padding: 18px 16px;
+      text-align: center;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-cell:nth-child(3n) { border-right: none; }
+    .stat-cell:nth-child(4),
+    .stat-cell:nth-child(5),
+    .stat-cell:nth-child(6) { border-bottom: none; }
+
+    .stat-icon { font-size: 1.1rem; margin-bottom: 6px; }
+
+    .stat-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .card-footer {
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    .lang-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .lang-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--lang-color, #8b949e);
+    }
+
+    .last-push { font-size: 0.75rem; }
+
+    .loading-card, .error-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 480px;
+      padding: 60px 24px;
       text-align: center;
     }
-    .stat-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: .06em; }
-    .stat-value { font-size: 1.3rem; font-weight: 700; margin-top: 6px; color: #e2e8f0; }
-    .meta-row { display: flex; gap: 16px; font-size: 13px; color: #94a3b8; }
-    .lang-dot {
-      width: 10px;
-      height: 10px;
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(88,166,255,0.2);
+      border-top-color: var(--link);
       border-radius: 50%;
-      background: #15803D;
-      display: inline-block;
-      margin-right: 6px;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 14px;
     }
-    .last-commit { font-size: 12px; color: #64748b; margin-top: 12px; }
-    .top-contributor { font-size: 12px; color: #64748b; margin-top: 6px; }
-    .refresh-btn {
-      display: block;
-      margin: 20px auto 0;
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-card p { color: var(--muted); font-size: 0.9rem; }
+    .error-card .err-icon { font-size: 2rem; margin-bottom: 10px; }
+    .error-card p { color: #f85149; font-size: 0.88rem; }
+
+    .try-again-btn {
+      margin-top: 14px;
       background: transparent;
-      border: 1px solid rgba(56,189,248,.3);
-      color: #38bdf8;
-      padding: 8px 20px;
-      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--link);
+      padding: 6px 16px;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 0.82rem;
+      font-family: inherit;
     }
-    .refresh-btn:hover { background: rgba(56,189,248,.1); }
+
+    .try-again-btn:hover { background: rgba(88,166,255,0.1); }
   </style>
 </head>
 <body>
-<div class="widget">
-
-  <!-- ===== DISPLAY SECTION — fill in real values via renderData() ===== -->
-  <div class="card">
-    <div class="repo-header">
-      <div class="repo-name" id="repo-name">&mdash; / &mdash;</div>
-      <div class="repo-desc" id="repo-desc">Loading description...</div>
-    </div>
-
-    <div class="stats-row">
-      <div class="stat">
-        <div class="stat-label">Stars</div>
-        <div class="stat-value" id="stars">&mdash;</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Forks</div>
-        <div class="stat-value" id="forks">&mdash;</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Issues</div>
-        <div class="stat-value" id="issues">&mdash;</div>
-      </div>
-    </div>
-
-    <div class="meta-row">
-      <div><span class="lang-dot" id="lang-dot"></span><span id="language">&mdash;</span></div>
-    </div>
-    <div class="last-commit" id="last-commit">Last commit: &mdash;</div>
-    <div class="top-contributor" id="top-contributor">Top contributor: &mdash;</div>
+<div id="app">
+  <div class="loading-card">
+    <div class="spinner"></div>
+    <p>Loading repository data...</p>
   </div>
-  <!-- ===== END DISPLAY SECTION ===== -->
-
-  <button class="refresh-btn" onclick="fetchData()">&#8635; Refresh</button>
 </div>
 
 <script>
-  // ---------------------------------------------------------------
-  // STEP 1: Set the GitHub repo you want to display
-  // ---------------------------------------------------------------
-  const OWNER = 'facebook'; // TODO: change to the GitHub username / org
-  const REPO  = 'react';    // TODO: change to the repository name
+  // ============================================================
+  // CONFIG — change to display any public GitHub repo
+  // ============================================================
+  const CONFIG = {
+    GITHUB_OWNER: "facebook",   // GitHub username or organisation
+    GITHUB_REPO:  "react",      // Repository name
+    GITHUB_TOKEN: ""            // Optional: personal access token for higher rate limits
+  };
 
-  // ---------------------------------------------------------------
-  // STEP 2: Build the GitHub API URL
-  // Docs: https://docs.github.com/en/rest/repos/repos#get-a-repository
-  // ---------------------------------------------------------------
-  const API_URL = ''; // TODO: 'https://api.github.com/repos/' + OWNER + '/' + REPO
+  const API_URL = `https://api.github.com/repos/${CONFIG.GITHUB_OWNER}/${CONFIG.GITHUB_REPO}`;
 
-  // ---------------------------------------------------------------
-  // STEP 3: Fetch data from the API
-  // ---------------------------------------------------------------
-  async function fetchData() {
-    // TODO: Call the API using fetch() and parse JSON
-    // const response = await fetch(API_URL);
-    // const data = await response.json();
-
-    // TODO: Optionally also fetch contributors:
-    // const contribRes = await fetch(API_URL + '/contributors?per_page=1');
-    // const contribs = await contribRes.json();
-
-    // TODO: Pass the data to renderData()
-    renderData({});
+  // Map GitHub language names to CSS class slugs
+  function langClass(lang) {
+    if (!lang) return "lang-default";
+    return "lang-" + lang.toLowerCase().replace(/[^a-z0-9]/g, "");
   }
 
-  // ---------------------------------------------------------------
-  // STEP 4: Update the display with real values
-  // ---------------------------------------------------------------
-  function renderData(data) {
-    // TODO: Fill in each element with the fetched values, for example:
-    // document.getElementById('repo-name').textContent  = data.full_name;
-    // document.getElementById('repo-desc').textContent  = data.description || 'No description';
-    // document.getElementById('stars').textContent      = data.stargazers_count.toLocaleString();
-    // document.getElementById('forks').textContent      = data.forks_count.toLocaleString();
-    // document.getElementById('issues').textContent     = data.open_issues_count.toLocaleString();
-    // document.getElementById('language').textContent   = data.language || 'Unknown';
-    // document.getElementById('last-commit').textContent = 'Last push: ' + new Date(data.pushed_at).toLocaleDateString();
+  // Format large numbers: 12345 → "12.3k"
+  function formatNum(n) {
+    if (n === null || n === undefined) return "—";
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+    if (n >= 1_000)     return (n / 1_000).toFixed(1) + "k";
+    return n.toLocaleString();
   }
 
-  fetchData();
+  // Relative time: "3 days ago", "2 hours ago"
+  function relativeTime(iso) {
+    const ms    = Date.now() - new Date(iso).getTime();
+    const mins  = Math.floor(ms / 60_000);
+    const hours = Math.floor(ms / 3_600_000);
+    const days  = Math.floor(ms / 86_400_000);
+    const months= Math.floor(days / 30);
+    const years = Math.floor(days / 365);
+
+    if (mins  < 1)   return "just now";
+    if (hours < 1)   return `${mins}m ago`;
+    if (days  < 1)   return `${hours}h ago`;
+    if (months< 1)   return `${days}d ago`;
+    if (years < 1)   return `${months}mo ago`;
+    return `${years}yr ago`;
+  }
+
+  function renderCard(repo) {
+    const lc     = langClass(repo.language);
+    const topics = (repo.topics || []).slice(0, 5);
+
+    document.getElementById("app").innerHTML = `
+      <div class="card">
+        <div class="card-header">
+          <div class="repo-path">
+            <span class="repo-icon">📦</span>
+            <a class="repo-full-name" href="${repo.html_url}" target="_blank" rel="noopener">
+              ${repo.full_name}
+            </a>
+            <span class="visibility-badge">${repo.visibility || "public"}</span>
+          </div>
+          ${repo.description
+            ? `<p class="repo-description">${repo.description}</p>`
+            : ""}
+          ${topics.length ? `
+            <div class="topics">
+              ${topics.map(t => `<span class="topic">${t}</span>`).join("")}
+            </div>` : ""}
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-cell">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-value">${formatNum(repo.stargazers_count)}</div>
+            <div class="stat-label">Stars</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-icon">🍴</div>
+            <div class="stat-value">${formatNum(repo.forks_count)}</div>
+            <div class="stat-label">Forks</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-icon">🐛</div>
+            <div class="stat-value">${formatNum(repo.open_issues_count)}</div>
+            <div class="stat-label">Issues</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-icon">👀</div>
+            <div class="stat-value">${formatNum(repo.watchers_count)}</div>
+            <div class="stat-label">Watchers</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-icon">📋</div>
+            <div class="stat-value">${formatNum(repo.size)} KB</div>
+            <div class="stat-label">Size</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-icon">📅</div>
+            <div class="stat-value" style="font-size:0.85rem">${relativeTime(repo.pushed_at)}</div>
+            <div class="stat-label">Last Push</div>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="lang-indicator ${lc}">
+            <span class="lang-dot"></span>
+            <span>${repo.language || "Unknown"}</span>
+          </div>
+          <span>Default branch: <strong>${repo.default_branch}</strong></span>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderError(msg) {
+    document.getElementById("app").innerHTML = `
+      <div class="error-card">
+        <div class="err-icon">⚠️</div>
+        <p>${msg}</p>
+        <button class="try-again-btn" onclick="loadRepo()">Try Again</button>
+      </div>
+    `;
+  }
+
+  async function loadRepo() {
+    document.getElementById("app").innerHTML = `
+      <div class="loading-card">
+        <div class="spinner"></div>
+        <p>Loading repository data...</p>
+      </div>
+    `;
+
+    const headers = { "Accept": "application/vnd.github+json" };
+    if (CONFIG.GITHUB_TOKEN) headers["Authorization"] = `Bearer ${CONFIG.GITHUB_TOKEN}`;
+
+    try {
+      const res = await fetch(API_URL, { headers });
+      if (res.status === 404) throw new Error(`Repository "${CONFIG.GITHUB_OWNER}/${CONFIG.GITHUB_REPO}" not found`);
+      if (res.status === 403) throw new Error("Rate limit exceeded. Add a GITHUB_TOKEN in CONFIG to increase limits.");
+      if (!res.ok)            throw new Error(`GitHub API error: HTTP ${res.status}`);
+
+      const data = await res.json();
+      renderCard(data);
+    } catch (err) {
+      renderError(err.message);
+    }
+  }
+
+  // Load on page open
+  loadRepo();
 </script>
 </body>
 </html>
