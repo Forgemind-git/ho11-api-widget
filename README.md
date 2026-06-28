@@ -24,10 +24,16 @@ Choose **one** of these real use-cases — or bring your own (get it approved fi
 
 5. You want your latest posts or now-playing track on your own page instead of sending people elsewhere. Build a widget that pulls a public API you use and shows your most recent items live. Success: a hosted page that fetches and displays your real latest content, with the README naming the API and the request made.
 
+## Build it with your Claude.ai subscription
+
+No API key needed — just your normal Claude.ai login. Every widget here calls a **free public data API** directly from the browser (weather, crypto, GitHub, exchange rates, quotes/jokes); none of them call Claude at runtime, and **none** need an Anthropic API key.
+
+To build one, open **Claude.ai**, open the sample folder you like (`samples/sample-01` … `sample-05`), and copy that sample's **example prompt** into Claude — it writes you a complete `index.html`. Save the file and double-click it. Each sample README has the full step-by-step.
+
 ## How to use this repo
 
 1. Click **Use this template** to create your own copy.
-2. Build your chosen project in your copy.
+2. Open the sample folder closest to your idea and copy its **example prompt** into Claude.ai to generate your widget — or open its ready-made `index.html` and tweak it.
 3. Replace this section of the README with: what you built, the problem it solves, and how to run it.
 
 ---

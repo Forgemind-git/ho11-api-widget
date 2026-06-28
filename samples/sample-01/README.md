@@ -4,6 +4,38 @@
 
 Build a self-contained HTML widget that fetches live weather and air quality data for any location using **two free public APIs** (no API key required) and displays temperature, weather conditions, wind speed, PM2.5 particulate matter, and AQI with colour-coded health ratings.
 
+## Use it with your Claude.ai subscription
+No API key needed — and no **Anthropic** API key either. This widget calls a free public weather API directly from the browser; Claude is only used to *build* it.
+
+1. Open **Claude.ai** in your browser and start a new chat.
+2. Copy **the example prompt** below and paste it in (change the city if you want).
+3. Claude writes a complete `index.html`. Copy the code block it gives you.
+4. Save it as `index.html` and **double-click** it — it opens in your browser and loads live data.
+5. To go live, upload that one file to a GitHub repo and turn on Pages (see "Deploy to GitHub Pages" below).
+
+The finished `index.html` in this folder is the answer key — the prompt is how a beginner reproduces it.
+
+## The example prompt
+Copy this into Claude.ai:
+
+```
+Build me a single self-contained index.html file (HTML, CSS and JavaScript all in one file, no build tools) for a weather and air-quality widget.
+
+Requirements:
+- Use the free Open-Meteo APIs (no API key, no sign-up):
+  - Weather: https://api.open-meteo.com/v1/forecast?latitude=28.6139&longitude=77.2090&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code
+  - Air quality: https://air-quality-api.open-meteo.com/v1/air-quality?latitude=28.6139&longitude=77.2090&current=pm2_5,us_aqi
+- Default location is New Delhi (latitude 28.6139, longitude 77.2090). Put the latitude, longitude and city name in a clearly-labelled CONFIG block at the top of the script so I can change my city easily.
+- Fetch both APIs when the page loads, and again when a "Refresh" button is clicked.
+- Show: temperature in °C, a plain-English weather condition (translate the Open-Meteo weather_code), wind speed in km/h, humidity %, the US AQI number and PM2.5.
+- Colour the AQI as a coloured pill: green Good (0–50), yellow Moderate (51–100), orange (101–150), red (151–200), purple (201–300), maroon (300+).
+- Dark, modern card layout. Show a "Last updated" time. Handle errors gracefully with a friendly message.
+```
+
+## Make it your own
+- Change the latitude/longitude/city in the `CONFIG` block to your own town (find coords at latlong.net).
+- Ask Claude to add a 3-day forecast or switch temperature to °F.
+
 ## APIs Used
 
 | API | Endpoint | Key Required? |
