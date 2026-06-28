@@ -1,381 +1,186 @@
+<!-- TODO: Set the API_URL, implement fetchData() to call it, and update renderData() to display the results -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Weather & Air Quality Widget</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather &amp; AQI Widget</title>
   <style>
-    :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --card2: #243044;
-      --text: #e2e8f0;
-      --muted: #94a3b8;
-      --accent: #38bdf8;
-      --radius: 16px;
-      --aqi-good: #22c55e;
-      --aqi-moderate: #eab308;
-      --aqi-sensitive: #f97316;
-      --aqi-unhealthy: #ef4444;
-      --aqi-very: #a855f7;
-      --aqi-hazardous: #7f1d1d;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
+    * { margin:0; padding:0; box-sizing:border-box; }
     body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
     }
-
-    .widget {
-      width: 100%;
-      max-width: 480px;
-    }
-
-    .widget-header {
+    .widget { width: 100%; max-width: 480px; }
+    .widget-title {
       text-align: center;
-      margin-bottom: 24px;
-    }
-
-    .widget-header h1 {
-      font-size: 1.1rem;
-      color: var(--muted);
-      font-weight: 400;
-      letter-spacing: 0.05em;
+      font-size: 13px;
+      color: #94a3b8;
       text-transform: uppercase;
-    }
-
-    .city-name {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--text);
-      margin-top: 4px;
-    }
-
-    .card {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 24px;
-      margin-bottom: 16px;
-      border: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .card-title {
-      font-size: 0.75rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 16px;
-    }
-
-    .weather-main {
-      display: flex;
-      align-items: center;
-      gap: 16px;
+      letter-spacing: .08em;
       margin-bottom: 20px;
     }
-
-    .weather-icon {
-      font-size: 3.5rem;
-      line-height: 1;
+    .card {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(255,255,255,.06);
     }
-
-    .weather-temp {
-      font-size: 3rem;
-      font-weight: 700;
-      line-height: 1;
-      color: var(--accent);
+    .card-label {
+      font-size: 11px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 14px;
     }
-
-    .weather-temp sup {
-      font-size: 1.2rem;
-      vertical-align: super;
-      color: var(--muted);
-    }
-
-    .weather-desc {
-      color: var(--muted);
-      font-size: 0.95rem;
-      margin-top: 4px;
-    }
-
-    .stat-row {
-      display: flex;
-      gap: 12px;
-    }
-
+    .row { display: flex; gap: 12px; }
     .stat {
       flex: 1;
-      background: var(--card2);
+      background: #243044;
       border-radius: 10px;
-      padding: 12px;
+      padding: 14px;
       text-align: center;
     }
-
-    .stat-label {
-      font-size: 0.7rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .stat-value {
-      font-size: 1.3rem;
-      font-weight: 700;
-      margin-top: 4px;
-      color: var(--text);
-    }
-
-    .stat-unit {
-      font-size: 0.7rem;
-      color: var(--muted);
-    }
-
-    .aqi-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 0.9rem;
+    .stat-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; }
+    .stat-value { font-size: 1.4rem; font-weight: 700; margin-top: 6px; color: #38bdf8; }
+    .stat-unit { font-size: 11px; color: #64748b; }
+    .aqi-band {
       margin-top: 16px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      display: inline-block;
+      font-weight: 700;
+      font-size: 14px;
+      background: rgba(34,197,94,.15);
+      color: #22c55e;
     }
-
-    .aqi-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: currentColor;
-    }
-
-    .aqi-good    { background: rgba(34,197,94,0.15);  color: var(--aqi-good); }
-    .aqi-moderate{ background: rgba(234,179,8,0.15);  color: var(--aqi-moderate); }
-    .aqi-sensitive{ background: rgba(249,115,22,0.15); color: var(--aqi-sensitive); }
-    .aqi-unhealthy{ background: rgba(239,68,68,0.15); color: var(--aqi-unhealthy); }
-    .aqi-very    { background: rgba(168,85,247,0.15); color: var(--aqi-very); }
-    .aqi-hazardous{ background: rgba(127,29,29,0.3);  color: #fca5a5; }
-
-    .loading-state, .error-state {
-      text-align: center;
-      padding: 60px 20px;
-    }
-
-    .loading-state p { color: var(--muted); font-size: 1.1rem; }
-
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(56,189,248,0.2);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 16px;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .error-state p { color: #f87171; font-size: 1rem; }
-    .error-icon { font-size: 2.5rem; margin-bottom: 12px; }
-
-    .updated-at {
-      text-align: center;
-      color: var(--muted);
-      font-size: 0.75rem;
-      margin-top: 12px;
-    }
-
     .refresh-btn {
       display: block;
       margin: 16px auto 0;
       background: transparent;
-      border: 1px solid rgba(56,189,248,0.3);
-      color: var(--accent);
+      border: 1px solid rgba(56,189,248,.3);
+      color: #38bdf8;
       padding: 8px 20px;
       border-radius: 999px;
       cursor: pointer;
-      font-size: 0.85rem;
-      transition: background 0.2s;
+      font-size: 13px;
     }
-
-    .refresh-btn:hover { background: rgba(56,189,248,0.1); }
+    .refresh-btn:hover { background: rgba(56,189,248,.1); }
+    .updated { text-align: center; font-size: 12px; color: #64748b; margin-top: 10px; }
   </style>
 </head>
 <body>
-<div class="widget" id="app">
-  <div class="loading-state">
-    <div class="spinner"></div>
-    <p>Fetching weather data...</p>
+<div class="widget">
+  <div class="widget-title">Weather &amp; Air Quality &mdash; Starter</div>
+
+  <!-- ===== DISPLAY SECTION — fill in real values via renderData() ===== -->
+  <div class="card">
+    <div class="card-label">Weather</div>
+    <div class="row">
+      <div class="stat">
+        <div class="stat-label">Temperature</div>
+        <div class="stat-value" id="temperature">&mdash;</div>
+        <div class="stat-unit">&deg;C</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Condition</div>
+        <div class="stat-value" id="condition">&mdash;</div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div class="stat">
+        <div class="stat-label">Wind Speed</div>
+        <div class="stat-value" id="wind">&mdash;</div>
+        <div class="stat-unit">km/h</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Humidity</div>
+        <div class="stat-value" id="humidity">&mdash;</div>
+        <div class="stat-unit">%</div>
+      </div>
+    </div>
   </div>
+
+  <div class="card">
+    <div class="card-label">Air Quality</div>
+    <div class="row">
+      <div class="stat">
+        <div class="stat-label">AQI Index</div>
+        <div class="stat-value" id="aqi">&mdash;</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">PM2.5</div>
+        <div class="stat-value" id="pm25">&mdash;</div>
+        <div class="stat-unit">&mu;g/m&sup3;</div>
+      </div>
+    </div>
+    <!-- TODO: Change the colour of this band to reflect the AQI level -->
+    <div class="aqi-band" id="aqi-band">Loading...</div>
+  </div>
+  <!-- ===== END DISPLAY SECTION ===== -->
+
+  <div class="updated" id="updated-at"></div>
+  <button class="refresh-btn" onclick="fetchData()">&#8635; Refresh</button>
 </div>
 
 <script>
-  // ============================================================
-  // CONFIG — edit these values to change location
-  // ============================================================
-  const CONFIG = {
-    LATITUDE:  28.6139,          // Decimal degrees (positive = North)
-    LONGITUDE: 77.2090,          // Decimal degrees (positive = East)
-    CITY_NAME: "New Delhi, India" // Display label only
-  };
+  // ---------------------------------------------------------------
+  // STEP 1: Set your location (latitude / longitude)
+  // You can find coords at: https://www.latlong.net/
+  // ---------------------------------------------------------------
+  const LATITUDE  = 28.6139;   // TODO: change to your city latitude
+  const LONGITUDE = 77.2090;   // TODO: change to your city longitude
+  const CITY_NAME = 'New Delhi'; // TODO: change to your city name
 
-  // API endpoints (no key required)
-  const WEATHER_URL =
-    `https://api.open-meteo.com/v1/forecast` +
-    `?latitude=${CONFIG.LATITUDE}&longitude=${CONFIG.LONGITUDE}` +
-    `&current=temperature_2m,weather_code,wind_speed_10m` +
-    `&timezone=auto`;
+  // ---------------------------------------------------------------
+  // STEP 2: Build the API URL
+  // Open-Meteo weather: https://open-meteo.com/en/docs
+  // Open-Meteo AQI:     https://open-meteo.com/en/docs/air-quality-api
+  // ---------------------------------------------------------------
+  const WEATHER_API_URL = ''; // TODO: paste the full Open-Meteo weather URL here
+  const AQI_API_URL     = ''; // TODO: paste the full Open-Meteo air-quality URL here
 
-  const AQI_URL =
-    `https://air-quality-api.open-meteo.com/v1/air-quality` +
-    `?latitude=${CONFIG.LATITUDE}&longitude=${CONFIG.LONGITUDE}` +
-    `&current=pm2_5,us_aqi` +
-    `&timezone=auto`;
+  // ---------------------------------------------------------------
+  // STEP 3: Fetch data from both APIs
+  // ---------------------------------------------------------------
+  async function fetchData() {
+    document.getElementById('updated-at').textContent = 'Loading...';
 
-  // WMO weather interpretation codes → emoji + description
-  const WMO_CODES = {
-    0: { icon: "☀️",  desc: "Clear sky" },
-    1: { icon: "🌤️", desc: "Mainly clear" },
-    2: { icon: "⛅",  desc: "Partly cloudy" },
-    3: { icon: "☁️",  desc: "Overcast" },
-    45:{ icon: "🌫️", desc: "Fog" },
-    48:{ icon: "🌫️", desc: "Depositing rime fog" },
-    51:{ icon: "🌦️", desc: "Light drizzle" },
-    53:{ icon: "🌦️", desc: "Moderate drizzle" },
-    55:{ icon: "🌧️", desc: "Dense drizzle" },
-    61:{ icon: "🌧️", desc: "Slight rain" },
-    63:{ icon: "🌧️", desc: "Moderate rain" },
-    65:{ icon: "🌧️", desc: "Heavy rain" },
-    71:{ icon: "🌨️", desc: "Slight snow" },
-    73:{ icon: "🌨️", desc: "Moderate snow" },
-    75:{ icon: "❄️",  desc: "Heavy snow" },
-    80:{ icon: "🌦️", desc: "Slight showers" },
-    81:{ icon: "🌧️", desc: "Moderate showers" },
-    82:{ icon: "⛈️",  desc: "Violent showers" },
-    95:{ icon: "⛈️",  desc: "Thunderstorm" },
-    96:{ icon: "⛈️",  desc: "Thunderstorm w/ hail" },
-    99:{ icon: "⛈️",  desc: "Thunderstorm w/ heavy hail" },
-  };
+    // TODO: Call WEATHER_API_URL and AQI_API_URL using fetch()
+    // const [weatherRes, aqiRes] = await Promise.all([fetch(WEATHER_API_URL), fetch(AQI_API_URL)]);
+    // const weather = await weatherRes.json();
+    // const aqi     = await aqiRes.json();
 
-  function getWeatherInfo(code) {
-    return WMO_CODES[code] || { icon: "🌡️", desc: `Code ${code}` };
+    // TODO: Pass the data to renderData()
+    renderData({});
   }
 
-  function getAqiInfo(aqi) {
-    if (aqi === null || aqi === undefined) return { cls: "", label: "N/A" };
-    if (aqi <= 50)  return { cls: "aqi-good",      label: `AQI ${aqi} — Good` };
-    if (aqi <= 100) return { cls: "aqi-moderate",   label: `AQI ${aqi} — Moderate` };
-    if (aqi <= 150) return { cls: "aqi-sensitive",  label: `AQI ${aqi} — Unhealthy for Sensitive Groups` };
-    if (aqi <= 200) return { cls: "aqi-unhealthy",  label: `AQI ${aqi} — Unhealthy` };
-    if (aqi <= 300) return { cls: "aqi-very",       label: `AQI ${aqi} — Very Unhealthy` };
-    return            { cls: "aqi-hazardous",        label: `AQI ${aqi} — Hazardous` };
-  }
+  // ---------------------------------------------------------------
+  // STEP 4: Update the display with real values
+  // ---------------------------------------------------------------
+  function renderData(data) {
+    // TODO: Fill in each element with the fetched values, for example:
+    // document.getElementById('temperature').textContent = data.temperature;
+    // document.getElementById('condition').textContent   = data.condition;
+    // document.getElementById('wind').textContent        = data.wind;
+    // document.getElementById('humidity').textContent    = data.humidity;
+    // document.getElementById('aqi').textContent         = data.aqi;
+    // document.getElementById('pm25').textContent        = data.pm25;
+    // document.getElementById('aqi-band').textContent    = data.aqiLabel;
 
-  function renderWidget(weather, air) {
-    const c = weather.current;
-    const a = air.current;
-    const wInfo = getWeatherInfo(c.weather_code);
-    const aqiInfo = getAqiInfo(a.us_aqi);
-    const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-    document.getElementById("app").innerHTML = `
-      <div class="widget-header">
-        <h1>Current Conditions</h1>
-        <div class="city-name">${CONFIG.CITY_NAME}</div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Weather</div>
-        <div class="weather-main">
-          <div class="weather-icon">${wInfo.icon}</div>
-          <div>
-            <div class="weather-temp">${Math.round(c.temperature_2m)}<sup>°C</sup></div>
-            <div class="weather-desc">${wInfo.desc}</div>
-          </div>
-        </div>
-        <div class="stat-row">
-          <div class="stat">
-            <div class="stat-label">Wind Speed</div>
-            <div class="stat-value">${Math.round(c.wind_speed_10m)}<span class="stat-unit"> km/h</span></div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">Feels Like</div>
-            <div class="stat-value">${Math.round(c.temperature_2m)}<span class="stat-unit">°C</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">Air Quality</div>
-        <div class="stat-row">
-          <div class="stat">
-            <div class="stat-label">PM2.5</div>
-            <div class="stat-value">${a.pm2_5 !== null ? a.pm2_5.toFixed(1) : "—"}<span class="stat-unit"> μg/m³</span></div>
-          </div>
-          <div class="stat">
-            <div class="stat-label">US AQI</div>
-            <div class="stat-value">${a.us_aqi !== null ? a.us_aqi : "—"}</div>
-          </div>
-        </div>
-        <div class="aqi-badge ${aqiInfo.cls}">
-          <span class="aqi-dot"></span>
-          ${aqiInfo.label}
-        </div>
-      </div>
-
-      <div class="updated-at">Last updated at ${now}</div>
-      <button class="refresh-btn" onclick="loadData()">↻ Refresh</button>
-    `;
-  }
-
-  function renderError(msg) {
-    document.getElementById("app").innerHTML = `
-      <div class="error-state">
-        <div class="error-icon">⚠️</div>
-        <p>${msg}</p>
-        <button class="refresh-btn" onclick="loadData()">Try Again</button>
-      </div>
-    `;
-  }
-
-  function renderLoading() {
-    document.getElementById("app").innerHTML = `
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <p>Fetching weather data...</p>
-      </div>
-    `;
-  }
-
-  async function loadData() {
-    renderLoading();
-    try {
-      const [weatherRes, aqiRes] = await Promise.all([
-        fetch(WEATHER_URL),
-        fetch(AQI_URL)
-      ]);
-
-      if (!weatherRes.ok) throw new Error(`Weather API error: ${weatherRes.status}`);
-      if (!aqiRes.ok)     throw new Error(`AQI API error: ${aqiRes.status}`);
-
-      const weatherData = await weatherRes.json();
-      const aqiData     = await aqiRes.json();
-
-      renderWidget(weatherData, aqiData);
-    } catch (err) {
-      renderError(`Could not load data: ${err.message}`);
-    }
+    document.getElementById('updated-at').textContent =
+      'Last updated: ' + new Date().toLocaleTimeString();
   }
 
   // Load on page open
-  loadData();
+  fetchData();
 </script>
 </body>
 </html>

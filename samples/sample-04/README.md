@@ -1,37 +1,26 @@
-# Sample 04 — Live Currency Converter
+# HO11 Sample 4 — Currency Converter
 
-## Problem Statement
+## Your task
 
-Build a self-contained HTML currency converter that fetches live exchange rates from the Frankfurter API (free, no API key required). The user enters an amount, picks from/to currencies, clicks Convert, and sees the converted amount. Not realtime — button-triggered fetch only.
+You buy from overseas and constantly look up exchange rates. Build a currency converter using a free FX-rate API.
 
-## API Used
+## API to use
 
-| API | Endpoint | Key Required? |
-|-----|----------|--------------|
-| Frankfurter | `https://api.frankfurter.app/latest?from=USD` | No |
+- exchangerate.host or frankfurter.app (no key) — `https://api.frankfurter.app/latest`
 
-## What It Shows
+All free, no API key needed.
 
-- Amount input field
-- From-currency dropdown (populated from live API)
-- To-currency dropdown (populated from live API)
-- Converted amount displayed prominently after clicking Convert
-- Exchange rate used (e.g. "1 USD = 0.9234 EUR")
-- Date of the rate
+## What to display
 
-## How to Use
+- Amount input + from/to dropdowns
+- Converted result
+- Rate history mini-chart (last 7 days)
+- Timestamp
 
-1. Open `index.html` in any modern browser — no server needed.
-2. Enter an amount (default: 1).
-3. Select your source and target currencies from the dropdowns.
-4. Click **Convert** to fetch the live rate and calculate.
+## How to build it
 
-## No API Key Setup
-
-Frankfurter is entirely free with no registration. It uses ECB (European Central Bank) rates updated daily on business days.
-
-## Deploy to GitHub Pages
-
-1. Push `index.html` to a GitHub repo (e.g. `username/currency-converter`).
-2. Go to **Settings → Pages → Source → Deploy from branch → main / root**.
-3. Your converter will be live at `https://username.github.io/currency-converter/`.
+1. Open index.html in your browser
+2. Read the TODO comments
+3. Add the fetch() call to the API
+4. Render the data in the display section
+5. Push to GitHub Pages for a live link

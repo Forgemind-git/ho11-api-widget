@@ -1,43 +1,26 @@
-# Sample 05 — Daily Inspiration + Joke Feed
+# HO11 Sample 5 — Quote & Joke Feed
 
-## Problem Statement
+## Your task
 
-Build a self-contained HTML widget that fetches a random inspirational quote from ZenQuotes and a random dad joke from icanhazdadjoke, displays them as styled cards, and lets the user refresh for new ones with a button click.
+You want something interesting on your personal page without sending people to social media. Build a widget that fetches a daily quote and a programming joke.
 
-## APIs Used
+## API to use
 
-| API | Endpoint | Key Required? |
-|-----|----------|--------------|
-| ZenQuotes | `https://zenquotes.io/api/random` | No |
-| icanhazdadjoke | `https://icanhazdadjoke.com/` | No (send `Accept: application/json`) |
+- quotable.io (quotes, no key) — `https://zenquotes.io/api/random`
+- official-joke-api.appspot.com (jokes, no key) — `https://icanhazdadjoke.com/`
 
-## What It Shows
+All free, no API key needed.
 
-- A "Quote of the Day" card with the quote text and author name
-- A "Dad Joke" card with a random joke
-- Refresh button that fetches both new content simultaneously
-- Loading and error states for each card independently
+## What to display
 
-## How to Use
+- Quote of the day + author
+- Joke (setup + punchline, click to reveal)
+- Refresh / next button
 
-1. Open `index.html` in any modern browser — no server needed.
-2. A quote and joke load automatically on page open.
-3. Click **Get New Ones** to refresh both cards.
+## How to build it
 
-## API Key / CORS Note
-
-**ZenQuotes CORS:** ZenQuotes does not allow direct browser requests from non-localhost origins in some environments. The widget falls back to their `allquotes` endpoint if needed, or you can open the file locally (file://) where CORS is not enforced.
-
-**icanhazdadjoke:** Works directly from the browser — just requires the `Accept: application/json` header.
-
-## No API Key Setup
-
-Both APIs are completely free and require no registration or API key.
-
-## Deploy to GitHub Pages
-
-1. Push `index.html` to a GitHub repo (e.g. `username/joke-quote-feed`).
-2. Go to **Settings → Pages → Source → Deploy from branch → main / root**.
-3. Your feed will be live at `https://username.github.io/joke-quote-feed/`.
-
-**Note on ZenQuotes CORS:** When deployed to GitHub Pages (or any non-localhost HTTPS origin), ZenQuotes may block requests due to CORS policy. In that case, the quote card will show a fallback quote. The joke card always works.
+1. Open index.html in your browser
+2. Read the TODO comments
+3. Add the fetch() call to the API
+4. Render the data in the display section
+5. Push to GitHub Pages for a live link
